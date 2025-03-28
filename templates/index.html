@@ -98,8 +98,42 @@
         <div id="selection-box" class="selection-box hidden"></div>
       </div>
 
+      <!-- Debug Toggle Button -->
+      <div class="mt-4 text-center">
+        <button
+          id="debug-toggle"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded text-sm"
+        >
+          Show Debug Tools
+        </button>
+      </div>
+
+      <!-- Debug Panel -->
+      <div id="debug-panel" class="hidden mt-2 p-3 bg-gray-100 rounded-lg">
+        <h3 class="font-bold mb-2">Debug Tools</h3>
+        <div class="flex flex-wrap gap-2">
+          <button
+            id="save-btn"
+            class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded text-sm"
+          >
+            Save Board to CSV
+          </button>
+          <button
+            id="load-btn"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm"
+          >
+            Load Board from CSV
+          </button>
+          <!-- Hidden file input for loading CSV -->
+          <input type="file" id="load-file" accept=".csv" class="hidden" />
+        </div>
+        <div class="mt-2 text-xs text-gray-600">
+          Debug mode allows you to save and load game boards. The CSV file format is a 10x17 grid of numbers.
+        </div>
+      </div>
+
       <div class="mt-4 text-center text-gray-600">
-        
+        Select fruits that add up to 10 to remove them and earn points.
       </div>
     </div>
   </div>
