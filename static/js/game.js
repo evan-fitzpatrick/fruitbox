@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let startCell = null;
   let currentCell = null;
   let selectedCells = [];
+  let debugMode = false;
 
   // Prevent default browser selection behavior
   gameContainer.addEventListener('selectstart', (e) => e.preventDefault());
@@ -92,6 +93,17 @@ document.addEventListener('DOMContentLoaded', () => {
     endSelection();
     e.preventDefault();
   });
+
+  // Debug mode toggle
+  document.getElementById('debug-toggle').addEventListener('click', toggleDebugMode);
+
+  // Debug mode buttons
+  document.getElementById('save-btn').addEventListener('click', saveGameState);
+  document.getElementById('load-btn').addEventListener('click', () => {
+    // Trigger file input click
+    document.getElementById('load-file').click();
+  });
+  document.getElementById('load-file').addEventListener('change', loadGameState);
 
   // Functions
   function initGame() {
@@ -281,5 +293,71 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('No match found or no cells selected.');
     }
     clearSelection();
+  }
+
+  // Debug Mode Functions
+  function toggleDebugMode() {
+    debugMode = !debugMode;
+    const debugPanel = document.getElementById('debug-panel');
+    if (debugMode) {
+      debugPanel.classList.remove('hidden');
+      document.getElementById('debug-toggle').textContent = 'Hide Debug Tools';
+    } else {
+      debugPanel.classList.add('hidden');
+      document.getElementById('debug-toggle').textContent = 'Show Debug Tools';
+    }
+  }
+
+  function saveGameState() {
+    // Convert grid to CSV format
+    let csvContent = '';
+    for (let row = 0; row < grid.length; row++) {
+      csvContent += grid[row].join(',') + '\n';
+    }
+
+    // Create a blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `game-state-${Date.now()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function loadGameState(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const csvContent = e.target.result;
+      const rows = csvContent.split('\n').filter(row => row.trim().length > 0);
+      
+      // Parse the CSV content into a grid
+      const newGrid = [];
+      for (let row of rows) {
+        const values = row.split(',').map(val => parseInt(val.trim(), 10));
+        if (values.length === 17) {  // Ensure correct width
+          newGrid.push(values);
+        }
+      }
+
+      // Validate grid dimensions
+      if (newGrid.length === 10) {  // Ensure correct height
+        grid = newGrid;
+        renderGrid();
+        console.log('Grid loaded from CSV:', grid);
+      } else {
+        alert('Invalid grid dimensions in CSV file. Expected 10 rows x 17 columns.');
+      }
+      
+      // Reset the file input
+      event.target.value = '';
+    };
+    
+    reader.readAsText(file);
   }
 });
