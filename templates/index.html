@@ -18,11 +18,8 @@
       display: grid;
       grid-template-columns: repeat(17, var(--cell-size));
       grid-template-rows: repeat(10, var(--cell-size));
-      gap: 4px; /* Must match gap used in JS calculations */
+      gap: 4px;
       user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
     }
 
     .grid-cell {
@@ -30,8 +27,6 @@
       height: var(--cell-size);
       position: relative;
       cursor: pointer;
-      user-drag: none;
-      -webkit-user-drag: none;
     }
 
     .grid-cell.empty {
@@ -41,8 +36,6 @@
     .grid-cell img {
       width: 100%;
       height: 100%;
-      user-drag: none;
-      -webkit-user-drag: none;
       pointer-events: none;
     }
 
@@ -52,7 +45,6 @@
       left: 50%;
       transform: translate(-50%, -50%);
       font-weight: bold;
-      /* Dynamic font-size relative to cell size */
       font-size: calc(var(--cell-size) / 2.2);
       color: white;
       text-shadow: 1px 1px 2px black;
@@ -69,71 +61,83 @@
       background-color: rgba(255, 255, 0, 0.2);
       pointer-events: none;
     }
+
+    /* Custom dark mode overrides (for portable dark mode without tailwind.config.js) */
+    body.dark {
+      background-color: #1a202c !important;
+      color: #f7fafc !important;
+    }
+    body.dark .bg-gray-100 {
+      background-color: #2d3748 !important;
+    }
+    body.dark .bg-white {
+      background-color: #2d3748 !important;
+    }
+    body.dark .text-gray-900 {
+      color: #f7fafc !important;
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100">
   <div class="container mx-auto py-8">
     <h1 class="text-3xl font-bold text-center mb-4">すごいアップルナンバーゲーム すごい</h1>
 
-    <div class="bg-white rounded-lg shadow-lg p-6 mx-auto" style="max-width: 100%;">
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-        <div class="text-xl font-bold mb-2 sm:mb-0">
-          Score: <span id="score">0</span>
-        </div>
-        <div class="text-xl font-bold mb-2 sm:mb-0">
-          Current Sum: <span id="sum">0</span>
-        </div>
+    <!-- Header: New Game and Score -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+      <button
+        id="reset-btn"
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+      >
+        New Game
+      </button>
+      <div class="text-xl font-bold">
+        Score: <span id="score">0</span>
+      </div>
+    </div>
+
+    <div id="game-container" class="relative mx-auto">
+      <div id="game-grid" class="game-grid">
+        <!-- Grid cells will be inserted here -->
+      </div>
+      <div id="selection-box" class="selection-box hidden"></div>
+    </div>
+
+    <!-- Debug Tools and Dark Mode Buttons in one row -->
+    <div class="mt-4 text-center flex justify-center gap-2">
+      <button
+        id="debug-toggle"
+        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded text-sm"
+      >
+        Show Debug Tools
+      </button>
+      <button 
+        id="dark-mode-toggle" 
+        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded text-sm">
+        Dark Mode
+      </button>
+    </div>
+
+    <!-- Debug Panel -->
+    <div id="debug-panel" class="hidden mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+      <h3 class="font-bold mb-2">Debug Tools</h3>
+      <div class="flex flex-wrap gap-2">
         <button
-          id="reset-btn"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          id="save-btn"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded text-sm"
         >
-          New Game
+          Save Board to CSV
         </button>
-      </div>
-
-      <div id="game-container" class="relative mx-auto">
-        <div id="game-grid" class="game-grid">
-          <!-- Grid cells will be inserted here -->
-        </div>
-        <div id="selection-box" class="selection-box hidden"></div>
-      </div>
-
-      <!-- Debug Toggle Button -->
-      <div class="mt-4 text-center">
         <button
-          id="debug-toggle"
-          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded text-sm"
+          id="load-btn"
+          class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm"
         >
-          Show Debug Tools
+          Load Board from CSV
         </button>
+        <!-- Hidden file input for loading CSV -->
+        <input type="file" id="load-file" accept=".csv" class="hidden" />
       </div>
-
-      <!-- Debug Panel -->
-      <div id="debug-panel" class="hidden mt-2 p-3 bg-gray-100 rounded-lg">
-        <h3 class="font-bold mb-2">Debug Tools</h3>
-        <div class="flex flex-wrap gap-2">
-          <button
-            id="save-btn"
-            class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded text-sm"
-          >
-            Save Board to CSV
-          </button>
-          <button
-            id="load-btn"
-            class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm"
-          >
-            Load Board from CSV
-          </button>
-          <!-- Hidden file input for loading CSV -->
-          <input type="file" id="load-file" accept=".csv" class="hidden" />
-        </div>
-        <div class="mt-2 text-xs text-gray-600">
-          Debug mode allows you to save and load game boards. The CSV file format is a 10x17 grid of numbers.
-        </div>
-      </div>
-
-      <div class="mt-4 text-center text-gray-600">
-        Select fruits that add up to 10 to remove them and earn points.
+      <div class="mt-2 text-xs text-gray-600">
+        Debug mode allows you to save and load game boards. The CSV file format is a 10x17 grid of numbers.
       </div>
     </div>
   </div>
