@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Number Icons Game</title>
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+    rel="stylesheet"
+  />
+  <style>
+    /* Default cell size (will be updated via JS) */
+    :root {
+      --cell-size: 40px;
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(16, var(--cell-size));
+      grid-template-rows: repeat(10, var(--cell-size));
+      gap: 4px; /* Must match gap used in JS calculations */
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .grid-cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      position: relative;
+      cursor: pointer;
+      user-drag: none;
+      -webkit-user-drag: none;
+    }
+
+    .grid-cell.empty {
+      background-color: transparent;
+    }
+
+    .grid-cell img {
+      width: 100%;
+      height: 100%;
+      user-drag: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+
+    .grid-cell .number {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      /* Dynamic font-size relative to cell size */
+      font-size: calc(var(--cell-size) / 2.2);
+      color: white;
+      text-shadow: 1px 1px 2px black;
+      pointer-events: none;
+    }
+
+    .selected {
+      outline: 3px solid yellow;
+    }
+
+    .selection-box {
+      position: absolute;
+      border: 2px dashed yellow;
+      background-color: rgba(255, 255, 0, 0.2);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto py-8">
+    <h1 class="text-3xl font-bold text-center mb-4">Number Icons Game</h1>
+
+    <div class="bg-white rounded-lg shadow-lg p-6 mx-auto" style="max-width: 100%;">
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+        <div class="text-xl font-bold mb-2 sm:mb-0">
+          Score: <span id="score">0</span>
+        </div>
+        <div class="text-xl font-bold mb-2 sm:mb-0">
+          Current Sum: <span id="sum">0</span>
+        </div>
+        <button
+          id="reset-btn"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        >
+          New Game
+        </button>
+      </div>
+
+      <div id="game-container" class="relative mx-auto">
+        <div id="game-grid" class="game-grid">
+          <!-- Grid cells will be inserted here -->
+        </div>
+        <div id="selection-box" class="selection-box hidden"></div>
+      </div>
+
+      <div class="mt-4 text-center text-gray-600">
+        Select icons in a rectangular area that add up to 10 to remove them and score points!
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/game.js"></script>
+</body>
+</html>
