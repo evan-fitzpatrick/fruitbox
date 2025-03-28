@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const availableWidth = Math.min(screenWidth - 80, 1200);
     const availableHeight = screenHeight - 240;
 
-    // For a 16x10 grid, there are 15 gaps horizontally and 9 gaps vertically (each gap = 4px)
-    const cellWidthBased = Math.floor((availableWidth - (15 * 4)) / 16);
+    // For a 17x10 grid, there are 16 gaps horizontally and 9 gaps vertically (each gap = 4px)
+    const cellWidthBased = Math.floor((availableWidth - (16 * 4)) / 17);
     const cellHeightBased = Math.floor((availableHeight - (9 * 4)) / 10);
 
     // Use the smaller cell size to ensure the grid fits both dimensions
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`Cell size set to ${cellSize}px based on screen size: ${screenWidth}x${screenHeight}`);
 
     // Update game container dimensions to exactly wrap the grid
-    const containerWidth = (cellSize * 16) + (4 * 15);
+    const containerWidth = (cellSize * 17) + (4 * 16);
     const containerHeight = (cellSize * 10) + (4 * 9);
     gameContainer.style.width = `${containerWidth}px`;
     gameContainer.style.height = `${containerHeight}px`;
