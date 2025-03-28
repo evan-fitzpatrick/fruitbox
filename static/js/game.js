@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function initGame() {
     score = 0;
     scoreElement.textContent = score;
-    // Removed sumElement update since the Current Sum section has been removed.
 
     fetch('/generate-grid')
       .then((response) => response.json())
@@ -182,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedCells.push({ row, col, value });
       }
     });
-    // Removed updating the Current Sum UI element.
     console.log('Selected cells:', selectedCells.length, 'Sum:', selectedCells.reduce((total, cell) => total + cell.value, 0));
   }
 
@@ -222,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Updated Save: Only save grid data
   function saveGameState() {
     let csvContent = '';
     for (let row = 0; row < grid.length; row++) {
@@ -238,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(link);
   }
 
+  // Updated Load: Calculate score from open spaces in the grid
   function loadGameState(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -254,6 +254,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (newGrid.length === 10) {
         grid = newGrid;
+        // Compute score as the number of cells with a value of 0 (open spaces)
+        let computedScore = 0;
+        grid.forEach(row => {
+          row.forEach(val => {
+            if (val === 0) computedScore++;
+          });
+        });
+        score = computedScore;
+        scoreElement.textContent = score.toString();
         renderGrid();
       } else {
         alert('Invalid grid dimensions in CSV file. Expected 10 rows x 17 columns.');
