@@ -6,21 +6,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectionBox = document.getElementById('selection-box');
   const gameContainer = document.getElementById('game-container');
   const darkModeToggle = document.getElementById('dark-mode-toggle');
+  const advancedToggle = document.getElementById('debug-toggle');
+  const saveButton = document.getElementById('save-btn');
+  const loadButton = document.getElementById('load-btn');
+  const fileInput = document.getElementById('load-file');
 
-  // Game state
-  let grid = [];
-  let score = 0;
+  // Initialize the game state
+  const gameState = window.gameState.init(gameGrid, scoreElement);
+  
+  // Selection state
   let isSelecting = false;
   let selectedCells = [];
-  let debugMode = false;
+  let advancedMode = false;
+  let startX, startY, currentX, currentY;
 
   // Prevent default browser selection behavior
   gameContainer.addEventListener('selectstart', (e) => e.preventDefault());
 
-  let startX, startY, currentX, currentY;
-
+  // Initialize the game
   initGame();
-
+  
   function setCellSize() {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -39,15 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
   setCellSize();
   window.addEventListener('resize', () => {
     setCellSize();
-    renderGrid();
+    gameState.renderGrid();
   });
 
+  // Event Listeners
   resetButton.addEventListener('click', initGame);
-  darkModeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    darkModeToggle.textContent = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
-  });
+  darkModeToggle.addEventListener('click', toggleDarkMode);
+  advancedToggle.addEventListener('click', toggleAdvancedMode);
+  saveButton.addEventListener('click', saveGameState);
+  loadButton.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', loadGameState);
 
+  // Touch and mouse event handling
   gameContainer.addEventListener('mousedown', startSelection);
   gameContainer.addEventListener('mousemove', updateSelection);
   gameContainer.addEventListener('mouseup', endSelection);
@@ -78,54 +86,32 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
   });
 
-  document.getElementById('debug-toggle').addEventListener('click', toggleDebugMode);
-  document.getElementById('save-btn').addEventListener('click', saveGameState);
-  document.getElementById('load-btn').addEventListener('click', () => {
-    document.getElementById('load-file').click();
-  });
-  document.getElementById('load-file').addEventListener('change', loadGameState);
-
+  // Game functions
   function initGame() {
-    score = 0;
-    scoreElement.textContent = score;
-
     fetch('/generate-grid')
       .then((response) => response.json())
       .then((data) => {
-        grid = data.grid;
-        renderGrid();
+        gameState.setGrid(data.grid, true);
       })
       .catch((error) => {
         console.error('Error loading grid:', error);
       });
   }
 
-  function renderGrid() {
-    gameGrid.innerHTML = '';
-    for (let row = 0; row < grid.length; row++) {
-      for (let col = 0; col < grid[row].length; col++) {
-        const cell = document.createElement('div');
-        cell.dataset.row = row;
-        cell.dataset.col = col;
-        cell.style.gridRow = row + 1;
-        cell.style.gridColumn = col + 1;
-        if (grid[row][col] === 0) {
-          cell.className = 'grid-cell empty';
-        } else {
-          cell.className = 'grid-cell';
-          cell.dataset.value = grid[row][col];
-          const img = document.createElement('img');
-          img.src = '/static/images/icon.png';
-          img.alt = 'Icon';
-          img.draggable = false;
-          const number = document.createElement('div');
-          number.className = 'number';
-          number.textContent = grid[row][col];
-          cell.appendChild(img);
-          cell.appendChild(number);
-        }
-        gameGrid.appendChild(cell);
-      }
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+    darkModeToggle.textContent = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
+  }
+
+  function toggleAdvancedMode() {
+    advancedMode = !advancedMode;
+    const debugPanel = document.getElementById('debug-panel');
+    if (advancedMode) {
+      debugPanel.classList.remove('hidden');
+      advancedToggle.textContent = 'Hide Advanced Tools';
+    } else {
+      debugPanel.classList.add('hidden');
+      advancedToggle.textContent = 'Show Advanced Tools';
     }
   }
 
@@ -157,7 +143,13 @@ document.addEventListener('DOMContentLoaded', () => {
     selectionBox.style.top = Math.min(startY, currentY) + 'px';
     selectionBox.style.width = width + 'px';
     selectionBox.style.height = height + 'px';
-    updateSelectedCells();
+    
+    // Only update the selected cells if the selection box has changed significantly
+    // This prevents flickering during small mouse movements
+    const minChange = 2; // pixels
+    if (Math.abs(event.movementX) > minChange || Math.abs(event.movementY) > minChange) {
+      updateSelectedCells();
+    }
   }
 
   function updateSelectedCells() {
@@ -196,36 +188,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (event) event.preventDefault();
     isSelecting = false;
     selectionBox.classList.add('hidden');
-    const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
-    if (sum === 10 && selectedCells.length > 0) {
-      selectedCells.forEach((cell) => {
-        grid[cell.row][cell.col] = 0;
-      });
-      score += selectedCells.length;
-      scoreElement.textContent = score.toString();
-      renderGrid();
+    
+    if (selectedCells.length > 0) {
+      const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
+      if (sum === 10) {
+        // Apply the move using the game state
+        gameState.applyMove({ cells: selectedCells }, true);
+      }
     }
+    
     clearSelection();
   }
 
-  function toggleDebugMode() {
-    debugMode = !debugMode;
-    const debugPanel = document.getElementById('debug-panel');
-    if (debugMode) {
-      debugPanel.classList.remove('hidden');
-      document.getElementById('debug-toggle').textContent = 'Hide Debug Tools';
-    } else {
-      debugPanel.classList.add('hidden');
-      document.getElementById('debug-toggle').textContent = 'Show Debug Tools';
-    }
-  }
-
-  // Updated Save: Only save grid data
+  // Save and load
   function saveGameState() {
-    let csvContent = '';
-    for (let row = 0; row < grid.length; row++) {
-      csvContent += grid[row].join(',') + '\n';
-    }
+    const csvContent = gameState.saveToCSV();
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -237,36 +214,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(link);
   }
 
-  // Updated Load: Calculate score from open spaces in the grid
   function loadGameState(event) {
     const file = event.target.files[0];
     if (!file) return;
+    
     const reader = new FileReader();
     reader.onload = function(e) {
       const csvContent = e.target.result;
-      const rows = csvContent.split('\n').filter(row => row.trim().length > 0);
-      const newGrid = [];
-      for (let row of rows) {
-        const values = row.split(',').map(val => parseInt(val.trim(), 10));
-        if (values.length === 17) {
-          newGrid.push(values);
-        }
+      const success = gameState.loadFromCSV(csvContent);
+      
+      if (!success) {
+        alert('Invalid file format or dimensions.');
       }
-      if (newGrid.length === 10) {
-        grid = newGrid;
-        // Compute score as the number of cells with a value of 0 (open spaces)
-        let computedScore = 0;
-        grid.forEach(row => {
-          row.forEach(val => {
-            if (val === 0) computedScore++;
-          });
-        });
-        score = computedScore;
-        scoreElement.textContent = score.toString();
-        renderGrid();
-      } else {
-        alert('Invalid grid dimensions in CSV file. Expected 10 rows x 17 columns.');
-      }
+      
       event.target.value = '';
     };
     reader.readAsText(file);
