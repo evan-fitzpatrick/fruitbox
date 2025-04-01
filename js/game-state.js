@@ -40,6 +40,26 @@ class GameState {
     return this;
   }
   
+  // Generate a random grid (replacing the server-side function)
+  generateRandomGrid() {
+    const grid = [];
+    for (let row = 0; row < 10; row++) {
+      const gridRow = [];
+      for (let col = 0; col < 17; col++) {
+        gridRow.push(Math.floor(Math.random() * 9) + 1); // Random number between 1-9
+      }
+      grid.push(gridRow);
+    }
+    return grid;
+  }
+  
+  // Initialize a new game with a random grid
+  newGame() {
+    const newGrid = this.generateRandomGrid();
+    this.setGrid(newGrid, true);
+    return this;
+  }
+  
   // Load a new grid (either from server or from a file)
   setGrid(newGrid, resetMoveHistory = true) {
     this.grid = JSON.parse(JSON.stringify(newGrid)); // Deep copy
@@ -157,8 +177,9 @@ class GameState {
           cell.className = 'grid-cell';
           cell.dataset.value = this.grid[row][col];
           
+          // Use the image icon instead of CSS-based circle
           const img = document.createElement('img');
-          img.src = '/static/images/icon.png';
+          img.src = 'images/icon.png'; // Path to your icon
           img.alt = 'Icon';
           img.draggable = false;
           
@@ -283,11 +304,11 @@ class GameState {
       moves.push({ cells });
     }
     
-    // Set the initial state
+    // Set the initial grid state
     this.initialGrid = initialGrid;
     this.grid = JSON.parse(JSON.stringify(initialGrid));
     this.moveHistory = moves;
-    this.currentMoveIndex = -1;
+    this.currentMoveIndex = -1; // Start at the beginning (before any moves)
     this.score = 0;
     
     this.updateScore();
