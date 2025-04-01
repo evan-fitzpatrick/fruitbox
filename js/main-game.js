@@ -88,14 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Game functions
   function initGame() {
-    fetch('/generate-grid')
-      .then((response) => response.json())
-      .then((data) => {
-        gameState.setGrid(data.grid, true);
-      })
-      .catch((error) => {
-        console.error('Error loading grid:', error);
-      });
+    // Generate a random grid client-side
+    gameState.newGame();
   }
 
   function toggleDarkMode() {

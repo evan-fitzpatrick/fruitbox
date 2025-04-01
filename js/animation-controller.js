@@ -231,33 +231,6 @@ class AnimationController {
     }, 5000);
   }
   
-  playAnimation() {
-    if (this.isAnimating) return;
-    
-    if (this.gameState.currentMoveIndex >= this.gameState.moveHistory.length - 1) {
-      // If at the end, start over
-      this.goToMove(-1);
-    }
-    
-    this.isAnimating = true;
-    
-    // Short delay before starting the animation to ensure UI is ready
-    setTimeout(() => {
-      if (this.isAnimating) {
-        this.applyNextMove();
-      }
-    }, 100);
-  }
-  
-  pauseAnimation() {
-    this.isAnimating = false;
-  }
-  
-  stopAnimation() {
-    this.isAnimating = false;
-    this.goToMove(-1);
-  }
-  
   applyNextMove() {
     if (!this.isAnimating) return;
     
@@ -297,35 +270,38 @@ class AnimationController {
       
       // Continue animation if still in play mode and not at the end
       if (this.isAnimating && nextMoveIndex < this.gameState.moveHistory.length - 1) {
-        // If we're not at the end, highlight the next move
-        const upcomingMoveIndex = nextMoveIndex + 1;
-        
-        // Clear any existing highlights first
-        document.querySelectorAll('.grid-cell.selected').forEach(cell => {
-          cell.classList.remove('selected');
-        });
-        
-        // Highlight cells for the upcoming move
-        if (upcomingMoveIndex < this.gameState.moveHistory.length) {
-          const upcomingMove = this.gameState.moveHistory[upcomingMoveIndex];
-          upcomingMove.cells.forEach(cell => {
-            const domCell = document.querySelector(`.grid-cell[data-row="${cell.row}"][data-col="${cell.col}"]`);
-            if (domCell) {
-              domCell.classList.add('selected');
-            }
-          });
-        }
-        
-        // Continue with the next move
         this.applyNextMove();
       } else if (nextMoveIndex >= this.gameState.moveHistory.length - 1) {
-        // At the end, clear all highlights
-        document.querySelectorAll('.grid-cell.selected').forEach(cell => {
-          cell.classList.remove('selected');
-        });
         this.pauseAnimation();
       }
     }, this.animationSpeed);
+  }
+  
+  playAnimation() {
+    if (this.isAnimating) return;
+    
+    if (this.gameState.currentMoveIndex >= this.gameState.moveHistory.length - 1) {
+      // If at the end, start over
+      this.goToMove(-1);
+    }
+    
+    this.isAnimating = true;
+    
+    // Short delay before starting the animation to ensure UI is ready
+    setTimeout(() => {
+      if (this.isAnimating) {
+        this.applyNextMove();
+      }
+    }, 100);
+  }
+  
+  pauseAnimation() {
+    this.isAnimating = false;
+  }
+  
+  stopAnimation() {
+    this.isAnimating = false;
+    this.goToMove(-1);
   }
   
   updateAnimationSpeed(event) {
