@@ -53,6 +53,12 @@
 
     .selected {
       outline: 3px solid yellow;
+      animation: pulse 1s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulse {
+      from { outline-color: rgba(255, 255, 0, 0.9); }
+      to { outline-color: rgba(255, 165, 0, 0.9); }
     }
 
     .selection-box {
@@ -102,13 +108,13 @@
       <div id="selection-box" class="selection-box hidden"></div>
     </div>
 
-    <!-- Debug Tools and Dark Mode Buttons in one row -->
+    <!-- Advanced Mode and Dark Mode Buttons in one row -->
     <div class="mt-4 text-center flex justify-center gap-2">
       <button
         id="debug-toggle"
         class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded text-sm"
       >
-        Show Debug Tools
+        Show Advanced Tools
       </button>
       <button 
         id="dark-mode-toggle" 
@@ -117,9 +123,9 @@
       </button>
     </div>
 
-    <!-- Debug Panel -->
+    <!-- Advanced Panel -->
     <div id="debug-panel" class="hidden mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
-      <h3 class="font-bold mb-2">Debug Tools</h3>
+      <h3 class="font-bold mb-2">Advanced Tools</h3>
       <div class="flex flex-wrap gap-2">
         <button
           id="save-btn"
@@ -136,12 +142,17 @@
         <!-- Hidden file input for loading CSV -->
         <input type="file" id="load-file" accept=".csv" class="hidden" />
       </div>
-      <div class="mt-2 text-xs text-gray-600">
-        Debug mode allows you to save and load game boards. The CSV file format is a 10x17 grid of numbers.
+      <div class="mt-2 text-xs text-gray-600 dark:text-gray-300">
+        Advanced mode allows you to save and load game boards. Saved files now include move sequences that can be replayed.
       </div>
     </div>
+    
+    <!-- Animation controls will be inserted here by JavaScript -->
   </div>
 
-  <script src="/static/js/game.js"></script>
+  <!-- New modular scripts -->
+  <script src="/static/js/game-state.js"></script>
+  <script src="/static/js/animation-controller.js"></script>
+  <script src="/static/js/main-game.js"></script>
 </body>
 </html>
