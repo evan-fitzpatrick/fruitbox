@@ -119,7 +119,7 @@
       <div id="selection-box" class="selection-box hidden"></div>
     </div>
 
-    <!-- Advanced Mode and Dark Mode Buttons in one row -->
+    <!-- Advanced Mode, Dark Mode, and Solver Buttons in one row -->
     <div class="mt-4 text-center flex justify-center gap-2">
       <button
         id="debug-toggle"
@@ -132,6 +132,7 @@
         class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded text-sm">
         Dark Mode
       </button>
+      <!-- Solver button will be added via JavaScript -->
     </div>
 
     <!-- Advanced Panel -->
@@ -159,11 +160,15 @@
     </div>
     
     <!-- Animation controls will be inserted here by JavaScript -->
+    
+    <!-- Solver Panel will be added via JavaScript -->
   </div>
 
   <!-- Scripts -->
   <script src="js/game-state.js"></script>
   <script src="js/animation-controller.js"></script>
+  <script src="js/game-solver.js"></script>
+  <script src="js/solver-ui.js"></script>
   <script src="js/main-game.js"></script>
 </body>
 </html>
