@@ -10,6 +10,9 @@ class GameState {
     this.initialGrid = null;
     this.currentMoveIndex = -1;
     
+    // Cached states for efficient navigation
+    this.stateCache = {};
+    
     // DOM elements (will be set during initialization)
     this.gameGridElement = null;
     this.scoreElement = null;
@@ -69,6 +72,13 @@ class GameState {
       this.moveHistory = [];
       this.currentMoveIndex = -1;
       this.score = 0;
+      this.stateCache = {}; // Clear the cache
+      
+      // Add initial state to cache
+      this.stateCache[-1] = {
+        grid: JSON.parse(JSON.stringify(this.initialGrid)),
+        score: 0
+      };
     }
     
     this.updateScore();
@@ -88,6 +98,12 @@ class GameState {
       // If this is the first move and we don't have an initial grid saved yet
       if (recordMove && !this.initialGrid && this.moveHistory.length === 0) {
         this.initialGrid = JSON.parse(JSON.stringify(this.grid));
+        
+        // Add initial state to cache
+        this.stateCache[-1] = {
+          grid: JSON.parse(JSON.stringify(this.initialGrid)),
+          score: 0
+        };
       }
       
       // Apply the move by setting cells to 0
@@ -100,8 +116,26 @@ class GameState {
       
       // Record the move if requested
       if (recordMove) {
+        // If we're not at the end of the move history, truncate it
+        if (this.currentMoveIndex < this.moveHistory.length - 1) {
+          this.moveHistory = this.moveHistory.slice(0, this.currentMoveIndex + 1);
+          
+          // Clear cache entries beyond currentMoveIndex
+          Object.keys(this.stateCache).forEach(index => {
+            if (parseInt(index) > this.currentMoveIndex) {
+              delete this.stateCache[index];
+            }
+          });
+        }
+        
         this.moveHistory.push(JSON.parse(JSON.stringify(move)));
         this.currentMoveIndex = this.moveHistory.length - 1;
+        
+        // Cache the current state
+        this.stateCache[this.currentMoveIndex] = {
+          grid: JSON.parse(JSON.stringify(this.grid)),
+          score: this.score
+        };
       }
       
       // Update UI and notify listeners
@@ -114,34 +148,76 @@ class GameState {
   }
   
   // Go to a specific move in the history
-  goToMove(moveIndex) {
+  goToMove(targetIndex) {
     if (!this.initialGrid) return this;
     
     // Validate the move index
-    if (moveIndex < -1 || moveIndex >= this.moveHistory.length) {
-      console.error(`Invalid move index: ${moveIndex}, valid range: -1 to ${this.moveHistory.length - 1}`);
+    if (targetIndex < -1 || targetIndex >= this.moveHistory.length) {
+      console.error(`Invalid move index: ${targetIndex}, valid range: -1 to ${this.moveHistory.length - 1}`);
       return this;
     }
     
-    console.log(`Going to move index: ${moveIndex}`);
+    console.log(`Going to move index: ${targetIndex}`);
     
-    // Reset to initial state
-    this.grid = JSON.parse(JSON.stringify(this.initialGrid));
-    this.score = 0;
+    // Optimization: Check if we have the target state cached
+    if (this.stateCache[targetIndex]) {
+      this.grid = JSON.parse(JSON.stringify(this.stateCache[targetIndex].grid));
+      this.score = this.stateCache[targetIndex].score;
+      this.currentMoveIndex = targetIndex;
+      
+      this.updateScore();
+      this.renderGrid();
+      this.notifyStateChange();
+      return this;
+    }
     
-    // Apply moves up to the requested index (inclusive)
-    // If moveIndex is -1, we show the initial state (no moves applied)
-    // If moveIndex is 0, we apply the first move
-    // If moveIndex is 1, we apply the first and second moves
-    // And so on...
-    for (let i = 0; i <= moveIndex; i++) {
-      if (i < this.moveHistory.length) {
-        console.log(`Applying move ${i}`);
-        this.applyMove(this.moveHistory[i], false);
+    // Optimization: Find the closest cached state before the target
+    let startIndex = -1;
+    let startState = null;
+    
+    for (let i = targetIndex - 1; i >= -1; i--) {
+      if (this.stateCache[i]) {
+        startIndex = i;
+        startState = this.stateCache[i];
+        break;
       }
     }
     
-    this.currentMoveIndex = moveIndex;
+    if (!startState) {
+      // Fallback: Start from initial state if no closer cached state found
+      startIndex = -1;
+      startState = {
+        grid: JSON.parse(JSON.stringify(this.initialGrid)),
+        score: 0
+      };
+      
+      // Cache this state
+      this.stateCache[-1] = startState;
+    }
+    
+    // Apply moves starting from the closest cached state
+    this.grid = JSON.parse(JSON.stringify(startState.grid));
+    this.score = startState.score;
+    
+    // Apply moves from startIndex+1 to targetIndex
+    for (let i = startIndex + 1; i <= targetIndex; i++) {
+      if (i < this.moveHistory.length) {
+        this.moveHistory[i].cells.forEach(cell => {
+          this.grid[cell.row][cell.col] = 0;
+        });
+        this.score += this.moveHistory[i].cells.length;
+      }
+      
+      // Cache intermediate states every 5 moves to prevent cache explosion
+      if (i % 5 === 0 || i === targetIndex) {
+        this.stateCache[i] = {
+          grid: JSON.parse(JSON.stringify(this.grid)),
+          score: this.score
+        };
+      }
+    }
+    
+    this.currentMoveIndex = targetIndex;
     this.updateScore();
     this.renderGrid();
     this.notifyStateChange();
@@ -264,6 +340,7 @@ class GameState {
       this.initialGrid = null;
       this.moveHistory = [];
       this.currentMoveIndex = -1;
+      this.stateCache = {}; // Clear the cache
       
       this.updateScore();
       this.renderGrid();
@@ -310,6 +387,42 @@ class GameState {
     this.moveHistory = moves;
     this.currentMoveIndex = -1; // Start at the beginning (before any moves)
     this.score = 0;
+    this.stateCache = {}; // Clear the cache
+    
+    // Pre-compute and cache states every 10 moves
+    this.stateCache[-1] = {
+      grid: JSON.parse(JSON.stringify(initialGrid)),
+      score: 0
+    };
+    
+    // If there are a lot of moves, pre-compute some cache points to improve slider performance
+    if (moves.length > 20) {
+      const cacheInterval = Math.max(5, Math.floor(moves.length / 10)); // Cache at least 10 points
+      
+      // Use setTimeout to avoid blocking the UI
+      setTimeout(() => {
+        let currentGrid = JSON.parse(JSON.stringify(initialGrid));
+        let currentScore = 0;
+        
+        for (let i = 0; i < moves.length; i++) {
+          // Apply the move
+          moves[i].cells.forEach(cell => {
+            currentGrid[cell.row][cell.col] = 0;
+          });
+          currentScore += moves[i].cells.length;
+          
+          // Cache at regular intervals and at the end
+          if (i % cacheInterval === 0 || i === moves.length - 1) {
+            this.stateCache[i] = {
+              grid: JSON.parse(JSON.stringify(currentGrid)),
+              score: currentScore
+            };
+          }
+        }
+        
+        console.log(`Pre-computed ${Object.keys(this.stateCache).length} cache points for ${moves.length} moves`);
+      }, 100);
+    }
     
     this.updateScore();
     this.renderGrid();
