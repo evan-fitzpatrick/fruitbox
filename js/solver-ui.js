@@ -52,7 +52,7 @@ class SolverUIController {
       { value: 'frequency3', label: '3n Frequency' },
       { value: 'frequency4', label: '4n Frequency' },
       { value: 'frequency5', label: '5n Frequency' },
-      { value: 'frequencyCustom', label: 'Custom Window Size' }
+      { value: 'frequencyCustom', label: 'Frequency Custom Size' }
     ];
     
     algorithms.forEach(algo => {
