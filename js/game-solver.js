@@ -314,11 +314,11 @@ function solveWithFrequencyAnalysis(board, windowSize = 5) {
 }
 
 /**
- * Simple greedy approach - select move with most points
+ * Simple greedy approach - select move with most/fewest points
  * @param {Array<Array<number>>} board - 2D array representing the game board
  * @returns {Object} - Solution with score and moves
  */
-function solveGreedy(board) {
+function solveGreedy(board, inverse = true) {
   let score = 0;
   const moves = [];
   const currentBoard = copyBoard(board);
@@ -332,7 +332,9 @@ function solveGreedy(board) {
     // Choose move with highest immediate points
     let bestMove = validMoves[0];
     for (let i = 1; i < validMoves.length; i++) {
-      if (validMoves[i].points > bestMove.points) {
+      if (!inverse && validMoves[i].points > bestMove.points) {
+        bestMove = validMoves[i];
+      } else if (inverse && validMoves[i].points < bestMove.points) {
         bestMove = validMoves[i];
       }
     }
