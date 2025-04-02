@@ -102,10 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const debugPanel = document.getElementById('debug-panel');
     if (advancedMode) {
       debugPanel.classList.remove('hidden');
-      advancedToggle.textContent = 'Hide Advanced Tools';
+      advancedToggle.textContent = 'Hide File Options';
     } else {
       debugPanel.classList.add('hidden');
-      advancedToggle.textContent = 'Show Advanced Tools';
+      advancedToggle.textContent = 'Show File Options';
     }
   }
 
