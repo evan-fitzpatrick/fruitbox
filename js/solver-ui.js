@@ -51,8 +51,8 @@ class SolverUIController {
     const algorithms = [
       { value: 'greedy', label: 'Greedy Search' },
       { value: 'invgreedy', label: 'Inverse Greedy' },
-      { value: 'maxoptions', label: 'Max Options Heuristic' },
-      { value: 'minpotentialloss', label: 'Min Potential Loss' }, // Add our newest heuristic
+      { value: 'maxoptions', label: 'Max Moves' },
+      { value: 'minpotentialloss', label: 'Max Potential Moves' }, 
       { value: 'frequency3', label: '3n Frequency' },
       { value: 'frequency4', label: '4n Frequency' },
       { value: 'frequency5', label: '5n Frequency' },
