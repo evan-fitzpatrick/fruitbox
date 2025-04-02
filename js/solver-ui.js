@@ -49,6 +49,7 @@ class SolverUIController {
     
     const algorithms = [
       { value: 'greedy', label: 'Greedy Search' },
+      { value: 'invgreedy', label: 'Inverse Greedy' },
       { value: 'frequency3', label: '3n Frequency' },
       { value: 'frequency4', label: '4n Frequency' },
       { value: 'frequency5', label: '5n Frequency' },
@@ -221,7 +222,10 @@ class SolverUIController {
         // Solve using selected algorithm
         switch (algorithm) {
           case 'greedy':
-            solution = this.solver.solveGreedy(board);
+            solution = this.solver.solveGreedy(board, false);
+            break;
+          case 'invgreedy':
+            solution = this.solver.solveGreedy(board, true);
             break;
           case 'frequency3':
             solution = this.solver.solveWithFrequencyAnalysis(board, 3);
