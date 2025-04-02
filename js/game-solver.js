@@ -434,6 +434,156 @@ function solveMaxOptions(board) {
 }
 
 /**
+ * Calculate potential value for each fruit on the board
+ * @param {Array<Array<number>>} board - 2D array representing the game board
+ * @returns {Array<Array<number>>} - 2D array with potential values
+ */
+function calculatePotentialValues(board) {
+  const n = board.length;
+  const m = board[0].length;
+  const potentialValues = Array(n).fill().map(() => Array(m).fill(0));
+  
+  // For each fruit, calculate its potential value
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      if (board[i][j] === 0) continue; // Skip empty cells
+      
+      let potentialValue = 0;
+      
+      // Examine all other fruits on the board
+      for (let i2 = 0; i2 < n; i2++) {
+        for (let j2 = 0; j2 < m; j2++) {
+          if (i === i2 && j === j2) continue; // Skip self
+          if (board[i2][j2] === 0) continue; // Skip empty cells
+          
+          const value1 = board[i][j];
+          const value2 = board[i2][j2];
+          const sum = value1 + value2;
+          
+          // Calculate g(f_i, f_j)
+          let g = 0;
+          if (sum === 10) g = 2;
+          else if (sum < 10) g = 1;
+          
+          // Calculate N(f_i, f_j) - the number of fruits between i and j
+          const minRow = Math.min(i, i2);
+          const maxRow = Math.max(i, i2);
+          const minCol = Math.min(j, j2);
+          const maxCol = Math.max(j, j2);
+          
+          let fruitsInBetween = 0;
+          
+          // Count fruits in the rectangle between the two fruits
+          for (let r = minRow; r <= maxRow; r++) {
+            for (let c = minCol; c <= maxCol; c++) {
+              if (board[r][c] !== 0 && !(r === i && c === j) && !(r === i2 && c === j2)) {
+                fruitsInBetween++;
+              }
+            }
+          }
+          
+          // Avoid division by zero by adding 1 to the denominator
+          const N = fruitsInBetween + 1;
+          
+          // Add to the potential value
+          potentialValue += g / N;
+        }
+      }
+      
+      potentialValues[i][j] = potentialValue;
+    }
+  }
+  
+  return potentialValues;
+}
+
+/**
+ * Calculate the total potential value lost by making a move
+ * @param {Array<Array<number>>} board - 2D array representing the game board
+ * @param {Array<Array<number>>} potentialValues - 2D array with potential values
+ * @param {Object} move - The move to evaluate
+ * @returns {number} - The total potential value lost
+ */
+function calculatePotentialLost(board, potentialValues, move) {
+  const [i, j] = move.topLeft;
+  const [i2, j2] = move.bottomRight;
+  let totalLost = 0;
+  
+  // Sum the potential values of all fruits in the move
+  for (let r = i; r <= i2; r++) {
+    for (let c = j; c <= j2; c++) {
+      if (board[r][c] !== 0) {
+        totalLost += potentialValues[r][c];
+      }
+    }
+  }
+  
+  return totalLost;
+}
+
+/**
+ * Solve using minimum potential value loss heuristic
+ * @param {Array<Array<number>>} board - 2D array representing the game board
+ * @returns {Object} - Solution with score and moves
+ */
+function solveWithMinPotentialLoss(board) {
+  let score = 0;
+  const moves = [];
+  const currentBoard = copyBoard(board);
+  
+  while (true) {
+    const validMoves = findValidMoves(currentBoard);
+    if (validMoves.length === 0) {
+      break;
+    }
+    
+    // Calculate potential values for all fruits
+    const potentialValues = calculatePotentialValues(currentBoard);
+    
+    // Score each move by how much potential value it removes
+    let bestMove = null;
+    let minPotentialLoss = Infinity;
+    
+    for (const move of validMoves) {
+      const potentialLoss = calculatePotentialLost(currentBoard, potentialValues, move);
+      
+      // Normalize by the number of points to prefer moves that remove
+      // less potential per fruit removed
+      const normalizedLoss = potentialLoss / move.points;
+      
+      if (normalizedLoss < minPotentialLoss) {
+        minPotentialLoss = normalizedLoss;
+        bestMove = move;
+      }
+    }
+    
+    if (!bestMove) {
+      break;
+    }
+    
+    const [i, j] = bestMove.topLeft;
+    const [i2, j2] = bestMove.bottomRight;
+    
+    score += bestMove.points;
+    moves.push({
+      topLeft: bestMove.topLeft,
+      bottomRight: bestMove.bottomRight,
+      points: bestMove.points,
+      cells: moveToCellsFormat(currentBoard, bestMove.topLeft, bestMove.bottomRight)
+    });
+    
+    // Update the board: zero out the selected subarray
+    for (let r = i; r <= i2; r++) {
+      for (let c = j; c <= j2; c++) {
+        currentBoard[r][c] = 0;
+      }
+    }
+  }
+  
+  return { score, moves, board: currentBoard };
+}
+
+/**
  * Main solver function - choose which algorithm to use
  * @param {Array<Array<number>>} board - 2D array representing the game board
  * @param {string} method - 'dfs', 'frequency', or 'greedy'
@@ -449,11 +599,14 @@ function solvePuzzle(board, method = 'frequency', windowSize = 5) {
   } else if (method === 'frequency') {
     return solveWithFrequencyAnalysis(board, windowSize);
   } else if (method === 'maxoptions') {
-    return solveMaxOptions(board);
+    return solveWithMaxOptions(board);
+  } else if (method === 'minpotentialloss') {
+    return solveWithMinPotentialLoss(board);
   } else {
     return solveGreedy(board);
   }
 }
+
 
 // Export solver functions
 window.gameSolver = {
@@ -461,5 +614,6 @@ window.gameSolver = {
   solveWithFrequencyAnalysis,
   solveWithDFS,
   solveMaxOptions,
+  solveWithMinPotentialLoss,
   solvePuzzle
 };
