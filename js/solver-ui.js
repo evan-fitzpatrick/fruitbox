@@ -1,4 +1,5 @@
-// Solver UI Controller for Fruit Box B Game
+// Update to the SolverUIController class to add the new heuristic
+
 class SolverUIController {
   constructor() {
     // UI elements
@@ -50,6 +51,7 @@ class SolverUIController {
     const algorithms = [
       { value: 'greedy', label: 'Greedy Search' },
       { value: 'invgreedy', label: 'Inverse Greedy' },
+      { value: 'maxoptions', label: 'Maximize Moves' }, // Add our new heuristic
       { value: 'frequency3', label: '3n Frequency' },
       { value: 'frequency4', label: '4n Frequency' },
       { value: 'frequency5', label: '5n Frequency' },
@@ -226,6 +228,9 @@ class SolverUIController {
             break;
           case 'invgreedy':
             solution = this.solver.solveGreedy(board, true);
+            break;
+          case 'maxoptions': // Add case for our new heuristic
+            solution = this.solver.solveMaxOptions(board);
             break;
           case 'frequency3':
             solution = this.solver.solveWithFrequencyAnalysis(board, 3);
