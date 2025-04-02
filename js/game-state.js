@@ -1,4 +1,4 @@
-// Game State Manager
+// Game State Manager - Updated for intuitive slider behavior
 // This manages the central state of the game and ensures all dependent components stay in sync
 
 class GameState {
@@ -116,17 +116,16 @@ class GameState {
       
       // Record the move if requested
       if (recordMove) {
-        // If we're not at the end of the move history, truncate it
-        if (this.currentMoveIndex < this.moveHistory.length - 1) {
-          this.moveHistory = this.moveHistory.slice(0, this.currentMoveIndex + 1);
-          
-          // Clear cache entries beyond currentMoveIndex
-          Object.keys(this.stateCache).forEach(index => {
-            if (parseInt(index) > this.currentMoveIndex) {
-              delete this.stateCache[index];
-            }
-          });
-        }
+        // UPDATED: Always truncate the move history at the current index
+        // This ensures that when making a move at a previous state, future moves are discarded
+        this.moveHistory = this.moveHistory.slice(0, this.currentMoveIndex + 1);
+        
+        // Clear cache entries beyond currentMoveIndex
+        Object.keys(this.stateCache).forEach(index => {
+          if (parseInt(index) > this.currentMoveIndex) {
+            delete this.stateCache[index];
+          }
+        });
         
         this.moveHistory.push(JSON.parse(JSON.stringify(move)));
         this.currentMoveIndex = this.moveHistory.length - 1;
@@ -220,6 +219,31 @@ class GameState {
     this.currentMoveIndex = targetIndex;
     this.updateScore();
     this.renderGrid();
+    this.notifyStateChange();
+    
+    return this;
+  }
+  
+  // NEW METHOD: Add solution moves to replace future moves
+  addSolutionMoves(solution) {
+    if (!solution || !solution.moves || solution.moves.length === 0) return this;
+    
+    // First, truncate move history to the current state
+    this.moveHistory = this.moveHistory.slice(0, this.currentMoveIndex + 1);
+    
+    // Clear cache entries beyond currentMoveIndex
+    Object.keys(this.stateCache).forEach(index => {
+      if (parseInt(index) > this.currentMoveIndex) {
+        delete this.stateCache[index];
+      }
+    });
+    
+    // Add the solution moves to the move history
+    for (const move of solution.moves) {
+      this.moveHistory.push(move);
+    }
+    
+    // Notify state change to update UI
     this.notifyStateChange();
     
     return this;
