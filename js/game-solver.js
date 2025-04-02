@@ -362,6 +362,78 @@ function solveGreedy(board, inverse = true) {
 }
 
 /**
+ * Solve using a Maximum Options heuristic
+ * Selects moves that result in the most future valid moves
+ * @param {Array<Array<number>>} board - 2D array representing the game board
+ * @returns {Object} - Solution with score and moves
+ */
+function solveMaxOptions(board) {
+  let score = 0;
+  const moves = [];
+  const currentBoard = copyBoard(board);
+  
+  while (true) {
+    const validMoves = findValidMoves(currentBoard);
+    if (validMoves.length === 0) {
+      break;
+    }
+    
+    // Score each move by how many options it leaves open
+    let bestMove = null;
+    let maxFutureMoves = -1;
+    
+    for (const move of validMoves) {
+      const [i, j] = move.topLeft;
+      const [i2, j2] = move.bottomRight;
+      
+      // Create a new board with the move applied
+      const newBoard = copyBoard(currentBoard);
+      for (let r = i; r <= i2; r++) {
+        for (let c = j; c <= j2; c++) {
+          newBoard[r][c] = 0;
+        }
+      }
+      
+      // Count how many valid moves would be available after this move
+      const futureValidMoves = findValidMoves(newBoard);
+      const numFutureMoves = futureValidMoves.length;
+      
+      // Select move with most future options
+      // If tied, prefer moves with fewer points (smaller rectangles)
+      if (numFutureMoves > maxFutureMoves || 
+          (numFutureMoves === maxFutureMoves && move.points < bestMove.points)) {
+        maxFutureMoves = numFutureMoves;
+        bestMove = move;
+      }
+    }
+    
+    if (!bestMove) {
+      break;
+    }
+    
+    const [i, j] = bestMove.topLeft;
+    const [i2, j2] = bestMove.bottomRight;
+    
+    score += bestMove.points;
+    moves.push({
+      topLeft: bestMove.topLeft,
+      bottomRight: bestMove.bottomRight,
+      points: bestMove.points,
+      cells: moveToCellsFormat(currentBoard, bestMove.topLeft, bestMove.bottomRight)
+    });
+    
+    // Update the board: zero out the selected subarray
+    for (let r = i; r <= i2; r++) {
+      for (let c = j; c <= j2; c++) {
+        currentBoard[r][c] = 0;
+      }
+    }
+  }
+  
+  return { score, moves, board: currentBoard };
+}
+
+/**
  * Main solver function - choose which algorithm to use
  * @param {Array<Array<number>>} board - 2D array representing the game board
  * @param {string} method - 'dfs', 'frequency', or 'greedy'
@@ -376,6 +448,8 @@ function solvePuzzle(board, method = 'frequency', windowSize = 5) {
     return solveWithDFS(board);
   } else if (method === 'frequency') {
     return solveWithFrequencyAnalysis(board, windowSize);
+  } else if (method === 'maxoptions') {
+    return solveMaxOptions(board);
   } else {
     return solveGreedy(board);
   }
@@ -386,5 +460,6 @@ window.gameSolver = {
   solveGreedy,
   solveWithFrequencyAnalysis,
   solveWithDFS,
+  solveMaxOptions,
   solvePuzzle
 };
