@@ -297,23 +297,22 @@ class SolverUIController {
       this.gameState.initialGrid = JSON.parse(JSON.stringify(this.gameState.grid));
     }
     
-    // Get the current move index
-    const currentMoveIndex = this.gameState.currentMoveIndex;
+    // Format solution moves if necessary
+    const formattedMoves = solution.moves.map(move => {
+      // If the move is already in the correct format, return it as is
+      if (move.cells) {
+        return move;
+      }
+      // Otherwise, format it properly
+      return {
+        cells: move.cells || moveToCellsFormat(this.gameState.grid, move.topLeft, move.bottomRight)
+      };
+    });
     
-    // If we're not at the end of the move history, we need to truncate it
-    if (currentMoveIndex < this.gameState.moveHistory.length - 1) {
-      this.gameState.moveHistory = this.gameState.moveHistory.slice(0, currentMoveIndex + 1);
-    }
-    
-    // Add the solution moves to the move history
-    for (const move of solution.moves) {
-      this.gameState.moveHistory.push({
-        cells: move.cells
-      });
-    }
-    
-    // Notify state change to update UI
-    this.gameState.notifyStateChange();
+    // Use the new addSolutionMoves method to handle the solution
+    this.gameState.addSolutionMoves({
+      moves: formattedMoves
+    });
   }
 }
 
