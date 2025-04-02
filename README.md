@@ -1,4 +1,4 @@
-Heuristic Leaderboard:
+Heuristic Leaderboard (100 runs):
 | Algorithm         |   Avg Runtime (ms) |   Avg Score |   Median Score |   Low Score |   High Score |   Win % |
 |:------------------|-------------------:|------------:|---------------:|------------:|-------------:|--------:|
 | Inverse Greedy    |               2.73 |      117.9  |          118.5 |          89 |          152 |      47 |
