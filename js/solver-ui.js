@@ -51,7 +51,8 @@ class SolverUIController {
     const algorithms = [
       { value: 'greedy', label: 'Greedy Search' },
       { value: 'invgreedy', label: 'Inverse Greedy' },
-      { value: 'maxoptions', label: 'Maximize Moves' }, // Add our new heuristic
+      { value: 'maxoptions', label: 'Max Options Heuristic' },
+      { value: 'minpotentialloss', label: 'Min Potential Loss' }, // Add our newest heuristic
       { value: 'frequency3', label: '3n Frequency' },
       { value: 'frequency4', label: '4n Frequency' },
       { value: 'frequency5', label: '5n Frequency' },
@@ -229,8 +230,11 @@ class SolverUIController {
           case 'invgreedy':
             solution = this.solver.solveGreedy(board, true);
             break;
-          case 'maxoptions': // Add case for our new heuristic
+          case 'maxoptions':
             solution = this.solver.solveMaxOptions(board);
+            break;
+          case 'minpotentialloss': // Add case for our newest heuristic
+            solution = this.solver.solveWithMinPotentialLoss(board);
             break;
           case 'frequency3':
             solution = this.solver.solveWithFrequencyAnalysis(board, 3);
