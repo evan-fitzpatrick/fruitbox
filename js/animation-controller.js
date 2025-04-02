@@ -68,7 +68,7 @@ class AnimationController {
       this.pauseButton.className = 'bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm';
       
       this.stopButton = document.createElement('button');
-      this.stopButton.innerHTML = '⏹️ Stop';
+      this.stopButton.innerHTML = '⏪ Reset';
       this.stopButton.className = 'bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded text-sm';
       
       // Create speed control
