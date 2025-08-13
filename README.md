@@ -1,3 +1,6 @@
+A webui frontend to visualize different heuristic algorithms for the game [Fruitbox A](https://en.gamesaien.com/game/fruit_box/).
+You can view the algorithm visualization at [https://evan-fitzpatrick.github.io/fruitbox/](https://evan-fitzpatrick.github.io/fruitbox/)
+
 Heuristic Leaderboard (1000 runs):
 | Algorithm        |   Avg Runtime (ms) |   Avg Score |   Median Score |   Low Score |   High Score |   Win % |
 |:-----------------|-------------------:|------------:|---------------:|------------:|-------------:|--------:|
